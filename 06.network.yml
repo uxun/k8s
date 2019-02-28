@@ -1,4 +1,4 @@
-# to install network plugin, only one can be choosen 
+# install network plugin, only one can be choosen 
 - hosts:
   - kube-master
   - kube-node
