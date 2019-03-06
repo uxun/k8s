@@ -4,10 +4,10 @@
 # example releases
 K8S_VER=v1.13.3
 ETCD_VER=v3.2.24
-DOCKER_VER=17.03.2-ce
+DOCKER_VER=18.06.3-ce
 CNI_VER=v0.6.0
-DOCKER_COMPOSE=1.18.0
-HARBOR=v1.7.0
+DOCKER_COMPOSE=1.23.0
+HARBOR=v1.6.0
 
 echo -e "\nNote1: Before this script, please finish downloading binaries manually from following urls."
 echo -e "\nNote2：If binaries are not ready, use "Ctrl + C" to stop this script."
