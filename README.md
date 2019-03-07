@@ -21,7 +21,7 @@
 | Deployment                                                   | Addons |
 | ------------------------------------------------------------ | ------ |
 | <a href="docs/setup/00.K8S_multi-master_deployment.md">NO.00-Rapid deployment</a> |        |
-| <a href="docs/setup/01-Hosts_environment_preparation.md">NO.01-Hosts_preparation</a> |        |
+| <a href="docs/setup/01.Hosts_environment_preparation.md">NO.01-Hosts_preparation</a> |        |
 | <a href="docs/setup/00.K8S_multi-master_deployment.md">NO.02-Rapid deployment</a> |        |
 | <a href="docs/setup/00.K8S_multi-master_deployment.md">NO.03-Rapid deployment</a> |        |
 | <a href="docs/setup/00.K8S_multi-master_deployment.md">NO.04-Rapid deployment</a> |        |
