@@ -14,14 +14,18 @@
 | docker  | 18.06.x-ce |
 | network | flannel    |
 
-### Install the cluster
-
 ------
+
+### Install the cluster
 
 | Deployment                                                   | Addons |
 | ------------------------------------------------------------ | ------ |
 | <a href="docs/setup/00.K8S_multi-master_deployment.md">NO.00-Rapid deployment</a> |        |
-|                                                              |        |
-|                                                              |        |
-|                                                              |        |
+| <a href="docs/setup/00.K8S_multi-master_deployment.md">NO.01-Rapid deployment</a> |        |
+| <a href="docs/setup/00.K8S_multi-master_deployment.md">NO.02-Rapid deployment</a> |        |
+| <a href="docs/setup/00.K8S_multi-master_deployment.md">NO.03-Rapid deployment</a> |        |
+| <a href="docs/setup/00.K8S_multi-master_deployment.md">NO.04-Rapid deployment</a> |        |
+| <a href="docs/setup/00.K8S_multi-master_deployment.md">NO.05-Rapid deployment</a> |        |
+| <a href="docs/setup/00.K8S_multi-master_deployment.md">NO.06-Rapid deployment</a> |        |
+| <a href="docs/setup/00.K8S_multi-master_deployment.md">NO.07-Rapid deployment</a> |        |
 
