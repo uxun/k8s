@@ -4,7 +4,7 @@
 
      `CLUSTER_NETWORK="flannel"`
 
-2. ##### $ ansible-playbook [06.network.yml](../../06.network.yml)
+2. ##### $ ansible-playbook [06.network.yml](../../../06.network.yml)
 
 ```
 roles/flannel
@@ -18,7 +18,7 @@ roles/flannel
 
 Kubernetes cluster 的网络插件之一，简单高效，且提供多个后端`backend`模式供选择；以`DaemonSet Pod`方式集成到k8s集群，需要在所有master节点和node节点安装。
 
-##### Task ⌘+ [roles/flannel/tasks/main.yml](../roles/flannel/tasks/main.yml) 
+##### Task ⌘+ [roles/flannel/tasks/main.yml](../../../roles/flannel/tasks/main.yml) 
 
 ## 1.Download CNI Plugin
 
@@ -63,7 +63,7 @@ FLANNEL_IPMASQ=true
 
 ## 2. Prepare Flannel-DaemonSet.yaml 
 
-⌘+ [roles/flannel/templates/kube-flannel.yaml.j2](../../roles/flannel/templates/kube-flannel.yaml.j2)
+⌘+ [roles/flannel/templates/kube-flannel.yaml.j2](../../../roles/flannel/templates/kube-flannel.yaml.j2)
 
 <u>注意：</u>
 
