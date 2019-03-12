@@ -1,15 +1,8 @@
 ## dashboard
 
-本文档基于 dashboard 1.10.0版本，k8s版本 1.11.x。因 dashboard 1.7 以后默认开启了自带的登陆验证机制，因此不同版本登陆有差异：
+本文档基于 dashboard 1.10.0版本，k8s版本 1.11.x。因 dashboard 1.7 以后默认开启了自带的登陆验证机制部署
 
-- 旧版（<= 1.6）建议通过apiserver访问，直接通过apiserver 认证授权机制去控制 dashboard权限，详见[旧版文档](dashboard.1.6.3.md)
-- 新版（>= 1.7）可以使用自带的登陆界面，使用不同Service Account Tokens 去控制访问 dashboard的权限
-
-### 部署
-
-如果之前已按照本项目部署dashboard1.6.3，先删除旧版本：`kubectl delete -f /etc/ansible/manifests/dashboard/1.6.3/`
-
-新版配置文件参考[官方文档](https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml)
+配置文件参考[官方文档](https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml)
 
 + 增加了通过`api-server`方式访问dashboard
 + 增加了`NodePort`方式暴露服务，这样集群外部可以使用 `https://NodeIP:NodePort` (注意是https不是http，区别于1.6.3版本) 直接访问 dashboard。

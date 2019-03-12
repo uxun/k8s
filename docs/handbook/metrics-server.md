@@ -1,19 +1,35 @@
 # Metrics Server
 
-> 从 v1.8 开始，资源使用情况的度量（如容器的 CPU 和内存使用）可以通过 Metrics API 获取；前提是集群中要部署 Metrics Server，它从Kubelet 公开的Summary API采集指标信息，关于更多的背景介绍请参考如下文档：  
+> 从 v1.8 开始，资源使用情况的度量（如容器的 CPU 和内存使用）可以通过 Metrics API 获取；前提是集群中要部署 Metrics Server，它从Kubelet 公开的Summary API采集指标信息，[关于更多的背景介绍请参考文档](https://github.com/kubernetes/community/blob/master/contributors/design-proposals/instrumentation/metrics-server.md) 
 
-- Metrics Server [设计提案](https://github.com/kubernetes/community/blob/master/contributors/design-proposals/instrumentation/metrics-server.md)
+## Metrics-server(服务资源指标的api)
 
-大致是说它符合k8s的监控架构设计，受heapster项目启发，并且比heapster优势在于：访问不需要apiserver的代理机制，提供认证和授权等；很多集群内组件依赖它（HPA,scheduler,kubectl top），因此它应该在集群中默认运行；部分k8s集群的安装工具已经默认集成了Metrics Server的安装，以下概述下它的安装：
+早期的核心指标数据是由heapster提供，1.11版本开始废弃，1.12彻底废弃-  ,1.13已经退休
 
-- 1.metric-server是扩展的apiserver，依赖于[kube-aggregator](https://github.com/kubernetes/kube-aggregator)，因此需要在apiserver中开启相关参数。
-- 2.需要在集群中运行deployment处理请求
+依赖于[kube-aggregator](https://github.com/kubernetes/kube-aggregator)，因此需要在apiserver中开启相关参数
 
-Metrics-server已经默认集成在集群安装脚本中，请查看`roles/cluster-addon/defaults/main.yml`中的设置
+1. 新的指标数据由Metrice-server 聚合提供
+2. API server 服务于(CPU累计使用率，内存实时使用率，Pod的资源占用率及容器的磁盘占用率)
+3. 托管在kubernetes上的Pod
+
+## Metrics工作流
+
+1. Kube-aggregator: 聚合不同组的api 统一
+2. /apis/metrics.k8s.io/v1beta1 由metrics server提供
+3. 通过kube-aggregator(聚合器)  访问/apis/metrics.k8s.io/v1beta1和其他的$(kubectl api-versions)
+
+```mermaid
+graph TD
+A[kube-aggregator] 
+A --> B[api-versions]
+A --> C[metrics-server]
+```
+
+
 
 ## 1.Install
 
-默认已集成在roles/cluster-addon中
+Metrics-server已经默认集成在集群安装脚本中，请查看`roles/cluster-addon/defaults/main.yml`中的设置
 
 #### 设置apiserver相关[参数](../../roles/kube-master/templates/kube-apiserver.service.j2)
 
@@ -62,3 +78,4 @@ $ kubectl top pod --all-namespaces 	# 输出略
 ``` bash
 $ kubectl apply -f /etc/ansible/manifests/heapster/heapster.yaml
 ```
+
