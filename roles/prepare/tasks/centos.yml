@@ -18,6 +18,7 @@
 
 - name: yum clean and makecache
   shell: "yum clean all && yum makecache"
+  ignore_warnings: yes
 
 - name: 添加EPEL仓库
   yum: name=epel-release state=latest

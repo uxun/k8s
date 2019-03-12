@@ -78,4 +78,3 @@ $ kubectl top pod --all-namespaces 	# 输出略
 ``` bash
 $ kubectl apply -f /etc/ansible/manifests/heapster/heapster.yaml
 ```
-
