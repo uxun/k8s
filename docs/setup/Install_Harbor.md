@@ -44,7 +44,7 @@ roles/harbor
 
 `kube-node`节点在harbor部署完之后，需要配置harbor的证书，并可以在hosts里面添加harbor的域名解析，如果你的环境中有dns服务器，可以跳过hosts文件设置
 
-请在另外窗口打开 [roles/harbor/tasks/main.yml](../../roles/harbor/tasks/main.yml)，对照以下讲解
+⌘+  [roles/harbor/tasks/main.yml](../../roles/harbor/tasks/main.yml)，对照以下讲解
 
 1. 下载docker-compose可执行文件到$PATH目录
 1. 自注册变量result判断是否已经安装harbor，避免重复安装问题
@@ -81,7 +81,7 @@ latest: digest: sha256:91ef6c1c52b166be02645b8efee30d1ee65362024f7da41c404681561
 
 1. 如果镜像保存在harbor中的公开项目中，那么只需要在yaml文件中简单指定harbor私有镜像即可，例如
 
-``` bash
+``` yaml
 apiVersion: v1
 kind: Pod
 metadata:
@@ -95,7 +95,7 @@ spec:
 
 2. 如果镜像保存在harbor中的私有项目中，那么yaml文件中使用该私有项目的镜像需要指定`imagePullSecrets`，例如
 
-``` bash
+``` yaml
 apiVersion: v1
 kind: Pod
 metadata:
@@ -113,7 +113,7 @@ spec:
 + 1.使用 `kubectl create secret docker-registry harborkey1 --docker-server=harbor.test.com --docker-username=admin --docker-password=Harbor12345 --docker-email=team@test.com`
 + 2.使用yaml配置文件生成 
 
-``` bash
+``` yaml
 //harborkey1.yaml
 apiVersion: v1
 kind: Secret
