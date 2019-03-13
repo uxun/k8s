@@ -1,40 +1,47 @@
-## dashboard
+# Dashboard
 
-本文档基于 dashboard 1.10.0版本，k8s版本 1.11.x。因 dashboard 1.7 以后默认开启了自带的登陆验证机制部署
+> Versioning support
+>
+> Dashboard 1.10.1 version 
+>
+> kubernetes 1.13.x version 
 
-配置文件参考[官方文档](https://raw.githubusercontent.com/kubernetes/dashboard/master/src/deploy/recommended/kubernetes-dashboard.yaml)
+参考[官方文档](https://github.com/kubernetes/dashboard)
 
-+ 增加了通过`api-server`方式访问dashboard
-+ 增加了`NodePort`方式暴露服务，这样集群外部可以使用 `https://NodeIP:NodePort` (注意是https不是http，区别于1.6.3版本) 直接访问 dashboard。
+1. 增加了通过`api-server`方式访问dashboard
+2. 增加了`NodePort`方式暴露服务，这样集群外部可以使用 `https://NodeIP:NodePort` (注意是https不是http，区别于1.6.3版本) 直接访问 dashboard。
 
-安装部署
+## 1.Install
 
 ``` bash
 # 部署dashboard 主yaml配置文件
 $ kubectl apply -f /etc/ansible/manifests/dashboard/kubernetes-dashboard.yaml
-# [可选]部署基本密码认证配置，使用apiserver 方式访问需要
-$ kubectl apply -f /etc/ansible/manifests/dashboard/ui-admin-rbac.yaml
-$ kubectl apply -f /etc/ansible/manifests/dashboard/ui-read-rbac.yaml
 # 创建可读可写 admin Service Account
 $ kubectl apply -f /etc/ansible/manifests/dashboard/admin-user-sa-rbac.yaml
 # 创建只读 read Service Account
 $ kubectl apply -f /etc/ansible/manifests/dashboard/read-user-sa-rbac.yaml
+# [可选]部署基本密码认证配置，使用apiserver 方式访问需要
+$ kubectl apply -f /etc/ansible/manifests/dashboard/ui-admin-rbac.yaml
+$ kubectl apply -f /etc/ansible/manifests/dashboard/ui-read-rbac.yaml
 ```
 
-### 验证
+## 2.Validation
 
-``` bash
+``` shell
 # 查看pod 运行状态
-kubectl get pod -n kube-system | grep dashboard
+$ kubectl get pod -n kube-system | grep dashboard
 kubernetes-dashboard-7c74685c48-9qdpn   1/1       Running   0          22s
+
 # 查看dashboard service
-kubectl get svc -n kube-system|grep dashboard
+$ kubectl get svc -n kube-system|grep dashboard
 kubernetes-dashboard   NodePort    10.68.219.38   <none>        443:24108/TCP                   53s
+
 # 查看集群服务
-kubectl cluster-info|grep dashboard
+$ kubectl cluster-info|grep dashboard
 kubernetes-dashboard is running at https://192.168.1.1:6443/api/v1/namespaces/kube-system/services/https:kubernetes-dashboard:/proxy
+
 # 查看pod 运行日志
-kubectl logs kubernetes-dashboard-7c74685c48-9qdpn -n kube-system
+$ kubectl logs kubernetes-dashboard-7c74685c48-9qdpn -n kube-system
 ```
 
 + 由于还未部署 Heapster 插件，当前 dashboard 不能展示 Pod、Nodes 的 CPU、内存等 metric 图形，后续部署 heapster后自然能够看到
@@ -55,33 +62,38 @@ kubectl logs kubernetes-dashboard-7c74685c48-9qdpn -n kube-system
 
 **注意：** 如果集群已启用 ingress tls的话，可以[配置ingress规则访问dashboard](ingress-tls.md#%E9%85%8D%E7%BD%AE-dashboard-ingress)
 
-### 演示新登陆方式
+## 3.Login
 
-为演示方便这里使用 `https://NodeIP:NodePort` 方式访问 dashboard，支持两种登录方式：Kubeconfig、令牌(Token)
+> 支持两种登录方式：Kubeconfig、令牌(Token)
+>
 
-- 令牌登录（admin）
+### 令牌登录（admin）
 
 选择“令牌(Token)”方式登陆，复制下面输出的admin token 字段到输入框
 
 ``` bash
 # 创建Service Account 和 ClusterRoleBinding
 $ kubectl apply -f /etc/ansible/manifests/dashboard/admin-user-sa-rbac.yaml
+
 # 获取 Bearer Token，找到输出中 ‘token:’ 开头那一行
 $ kubectl -n kube-system describe secret $(kubectl -n kube-system get secret | grep admin-user | awk '{print $1}')
 ```
 
-- 令牌登录（只读）
+### 令牌登录（只读）
 
 选择“令牌(Token)”方式登陆，复制下面输出的read token 字段到输入框
 
 ``` bash
 # 创建Service Account 和 ClusterRoleBinding
 $ kubectl apply -f /etc/ansible/manifests/dashboard/read-user-sa-rbac.yaml
+
 # 获取 Bearer Token，找到输出中 ‘token:’ 开头那一行
 $ kubectl -n kube-system describe secret $(kubectl -n kube-system get secret | grep read-user | awk '{print $1}')
 ```
-- Kubeconfig登录（admin）
+### Kubeconfig登录（admin）
+
 Admin kubeconfig文件默认位置：`/root/.kube/config`，该文件中默认没有token字段，使用Kubeconfig方式登录，还需要将token追加到该文件中，完整的文件格式如下：
+
 ```
 apiVersion: v1
 clusters:
