@@ -67,11 +67,16 @@ roles/harbor
 使用docker客户端登陆`harbor.test.com`，然后把镜像tag成 `harbor.test.com/$项目名/$镜像名:$TAG` 之后，即可使用docker push 上传
 
 ``` bash
-docker login harbor.test.com
+# login YOU harbor
+$ docker login harbor.test.com
 Username: 
 Password:
 Login Succeeded
+
+# tag you dockerimage
 $ docker tag busybox:latest harbor.test.com/library/busybox:latest
+
+# push docker images
 $ docker push harbor.test.com/library/busybox:latest
 The push refers to a repository [harbor.test.com/library/busybox]
 0271b8eebde3: Pushed 
