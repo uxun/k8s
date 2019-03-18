@@ -7,7 +7,7 @@ ETCD_VER=v3.2.24
 DOCKER_VER=18.06.3-ce
 CNI_VER=v0.6.0
 DOCKER_COMPOSE=1.23.0
-HARBOR=v1.6.3
+HARBOR=v1.7.4
 
 echo -e "\nNote1: Before this script, please finish downloading binaries manually from following urls."
 echo -e "\nNote2：If binaries are not ready, use "Ctrl + C" to stop this script."
@@ -30,7 +30,7 @@ echo -e "\n----download docker-compose at:"
 echo https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE}/docker-compose-Linux-x86_64
 
 echo -e "\n----download harbor-offline-installer at:"
-echo https://storage.googleapis.com/harbor-releases/release-1.6.0/harbor-offline-installer-${HARBOR}.tgz
+echo https://storage.googleapis.com/harbor-releases/release-1.7.0/harbor-offline-installer-${HARBOR}.tgz
 
 echo -e "\n----download cni plugins at:"
 echo https://github.com/containernetworking/plugins/releases/download/${CNI_VER}/cni-${CNI_VER}.tgz
