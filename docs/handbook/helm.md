@@ -3,11 +3,8 @@
 ## 1.Guide
 
 #### From the Binary [Releases](https://helm.sh/docs/using_helm/#from-the-binary-releases)
-
 #### Easy In-Cluster [Installation](https://helm.sh/docs/using_helm/#easy-in-cluster-installation)
-
 #### Using SSL Between Helm and [Tiller](https://helm.sh/docs/using_helm/#using-ssl-between-helm-and-tiller)
-
 #### Service account with cluster-admin [role](https://helm.sh/docs/using_helm/#example-service-account-with-cluster-admin-role)
 
 ## 2.Ansible install
