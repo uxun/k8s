@@ -274,68 +274,84 @@ data:
       CertFile = "/ssl/tls.crt"
       KeyFile = "/ssl/tls.key"
 EOF
-
-$ kubectl apply -f traefik-tls-configmap.yaml
 ```
 
+### 3.apply trafik configmap
 
+```
+kubectl apply -f /etc/ansible/manifests/ingress/tls/traefik-tls-configmap.yaml
+kubectl apply -f /etc/ansible/manifests/ingress/tls/traefik-tls-deployment.yaml
+```
 
-### 4. https ingress 
+### 4.https traefik-ui
 
-``` bash
-# 创建示例应用
-$ kubectl run test-hello --image=nginx --port=80 --expose
-# hello-tls-ingress 示例
+``` yaml
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: traefik-web-ui
+  namespace: kube-system
+spec:
+  selector:
+    k8s-app: traefik-ingress-lb
+  ports:
+  - name: web
+    port: 80
+    targetPort: 8080
+---
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: hello-tls-ingress
+  name: traefik-web-ui
+  namespace: kube-system
+  # add
   annotations:
     kubernetes.io/ingress.class: traefik
 spec:
   rules:
-  - host: hello.test.com
+  - host: traefik-ui.test.com
     http:
       paths:
-      - backend:
-          serviceName: test-hello
-          servicePort: 80
+      - path: /
+        backend:
+          serviceName: traefik-web-ui
+          servicePort: web
+  # add 
   tls:
-  - secretName: traefik-cert
-  
-# 创建https ingress
-$ kubectl apply -f /etc/ansible/manifests/ingress/traefik/tls/hello-tls.ing.yaml
-# 注意根据hello示例，需要在default命名空间创建对应的secret: traefik-cert
-$ kubectl create secret tls traefik-cert --key=tls.key --cert=tls.crt
+   - secretName: traefik-tls-cert
+   
 ```
 
 ### 5.validation
 
-验证 traefik-ingress svc
+traefik-ingress svc
 
 ``` bash
-$ kubectl get svc -n kube-system traefik-ingress-service 
-NAME                      TYPE       CLUSTER-IP      EXTERNAL-IP   PORT(S)                                     AGE
-traefik-ingress-service   NodePort   10.68.250.253   <none>        80:23456/TCP,443:23457/TCP,8080:35941/TCP   66m
+kubectl get svc --all-namespaces -o wide
+kube-system   traefik-ingress-service   NodePort    10.68.124.202   <none>        80:20080/TCP,443:20443/TCP,8080:20081/TCP   7h46m   k8s-app=traefik-ingress-lb
+
+curl -k https://traefik-ui.test.com:20443
+<a href="/dashboard/">Found</a>.
 ```
 
-可以看到项目默认使用nodePort 23456暴露traefik 80端口，nodePort 23457暴露 traefik 443端口，因此在客户端 hosts 增加记录 `$Node_IP hello.test.com`之后，可以在浏览器验证访问如下：
+### 6.dashboard ingress
 
-``` bash
-https://hello.test.com:23457
-```
+> 注意annotations 配置了 http 跳转 https 功能
+>
+> 注意后端服务是443端口
+>
+> 集群的dashboard 已安装
 
-### dashboard ingress
+traefik-tls-configmap.yaml
 
-前提1：k8s 集群的dashboard 已安装
+`traefik.toml enable insecureSkipVerify = true`
 
 ```shell
-$ kubectl get svc -n kube-system | grep dashboard
-kubernetes-dashboard      NodePort    10.68.211.168   <none>        443:39308/TCP	3d11h
+# kubectl get svc -n kube-system | grep dashboard
+kubernetes-dashboard      NodePort    10.68.30.99     <none>        443:24384/TCP                               14d
 ```
-前提2：`/etc/ansible/manifests/ingress/traefik/tls/traefik-controller.yaml`的配置文件`traefik.toml`开启了`insecureSkipVerify = true`
-
-配置 dashboard ingress：`kubectl apply -f /etc/ansible/manifests/ingress/traefik/tls/k8s-dashboard.ing.yaml` 内容如下：
+kubectl apply -f /etc/ansible/manifests/ingress/tls/ingress-dashboard.yaml
 
 ```yaml
 apiVersion: extensions/v1beta1
@@ -347,7 +363,8 @@ metadata:
     traefik.ingress.kubernetes.io/redirect-entry-point: https
 spec:
   rules:
-  - host: dashboard.test.com
+  # changeful
+  - host: dashboard.YOU.com
     http:
       paths:
       - path: /
@@ -355,9 +372,6 @@ spec:
           serviceName: kubernetes-dashboard
           servicePort: 443
 ```
-- 注意annotations 配置了 http 跳转 https 功能
-- 注意后端服务是443端口
-
-### 参考
+### REFERENCE
 
 - [Add a TLS Certificate to the Ingress](https://docs.traefik.io/user-guide/kubernetes/#add-a-tls-certificate-to-the-ingress)
