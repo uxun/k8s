@@ -222,31 +222,65 @@ curl http://traefik-ui.test.com:8088
 <a href="/dashboard/">Found</a>.
 ```
 
-# 使用 traefik 配置 https ingress
 
-本文档基于 traefik 配置 https ingress 规则，请先阅读[配置基本 ingress](ingress.md)。与基本 ingress-controller 相比，需要额外配置 https tls 证书，主要步骤如下：
 
-## 1.准备 tls 证书
+## ingress-traefik TLS
 
-可以使用Let's Encrypt签发的免费证书，这里为了测试方便使用自签证书 (tls.key/tls.crt)，注意CN 配置为 ingress 的域名：
+### 1.prepare tls 
 
-``` bash
-$ openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout tls.key -out tls.crt -subj "/CN=hello.test.com"
-```
+> Let's Encrypt 
 
-## 2.在 kube-system 命名空间创建 secret: traefik-cert，以便后面 traefik-controller 挂载该证书
+使用自签证书 (tls.key/tls.crt)，
+
+注意CN 配置为 ingress 的域名：
 
 ``` bash
-$ kubectl -n kube-system create secret tls traefik-cert --key=tls.key --cert=tls.crt
+$ openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout tls.key -out tls.crt -subj "/CN=traefik-ui.test.com"
+
+# kube-system namespaces create (secret: traefik-ui-tls-cert),traefik-controller Convenient for mounting certificates
+$ kubectl -n kube-system create secret tls traefik-tls-cert --key=tls.key --cert=tls.crt
 ```
 
-## 3.创建 traefik-controller，增加 traefik.toml 配置文件及https 端口暴露等，详见该 yaml 文件
+### 2.create traefik configmap
 
 ``` bash
-$ kubectl apply -f /etc/ansible/manifests/ingress/traefik/tls/traefik-controller.yaml
+cat <<EOF> traefik-tls-configmap.yaml
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: kube-system
+  name: traefik-tls-conf
+data:
+  traefik.toml: |
+    # insecureSkipVerify = true，backend(不卸载tls)443，e.g dashboard ingress rules
+    insecureSkipVerify = true
+    # traefik.toml
+    logLevel = "DEBUG"
+    defaultEntryPoints = ["http","https"]
+    [entryPoints]
+      [entryPoints.http]
+      address = ":80"
+      ## http skip https 
+      [entryPoints.http.redirect]
+      #entryPoint = "https"
+      [entryPoints.https]
+      address = ":443"
+      ## trustedIPs --> X-Frowarded-*,default(all)
+      #[entryPoints.http.forwardedHeaders]
+      #trustedIPs = ["10.1.0.0/16", "172.20.0.0/16", "192.168.1.x"]
+      [entryPoints.https.tls]
+      [[entryPoints.https.tls.certificates]]
+      CertFile = "/ssl/tls.crt"
+      KeyFile = "/ssl/tls.key"
+EOF
+
+$ kubectl apply -f traefik-tls-configmap.yaml
 ```
 
-## 4.创建 https ingress 例子
+
+
+### 4. https ingress 
 
 ``` bash
 # 创建示例应用
@@ -268,13 +302,14 @@ spec:
           servicePort: 80
   tls:
   - secretName: traefik-cert
+  
 # 创建https ingress
 $ kubectl apply -f /etc/ansible/manifests/ingress/traefik/tls/hello-tls.ing.yaml
 # 注意根据hello示例，需要在default命名空间创建对应的secret: traefik-cert
 $ kubectl create secret tls traefik-cert --key=tls.key --cert=tls.crt
 ```
 
-## 5.验证 https 访问
+### 5.validation
 
 验证 traefik-ingress svc
 
@@ -290,13 +325,11 @@ traefik-ingress-service   NodePort   10.68.250.253   <none>        80:23456/TCP,
 https://hello.test.com:23457
 ```
 
-如果你已经配置了[转发 ingress nodePort](../op/loadballance_ingress_nodeport.md)，那么增加对应 hosts记录后，可以验证访问 `https://hello.test.com`
-
-## 配置 dashboard ingress
+### dashboard ingress
 
 前提1：k8s 集群的dashboard 已安装
 
-```
+```shell
 $ kubectl get svc -n kube-system | grep dashboard
 kubernetes-dashboard      NodePort    10.68.211.168   <none>        443:39308/TCP	3d11h
 ```
@@ -304,7 +337,7 @@ kubernetes-dashboard      NodePort    10.68.211.168   <none>        443:39308/TC
 
 配置 dashboard ingress：`kubectl apply -f /etc/ansible/manifests/ingress/traefik/tls/k8s-dashboard.ing.yaml` 内容如下：
 
-```
+```yaml
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
@@ -325,6 +358,6 @@ spec:
 - 注意annotations 配置了 http 跳转 https 功能
 - 注意后端服务是443端口
 
-## 参考
+### 参考
 
 - [Add a TLS Certificate to the Ingress](https://docs.traefik.io/user-guide/kubernetes/#add-a-tls-certificate-to-the-ingress)

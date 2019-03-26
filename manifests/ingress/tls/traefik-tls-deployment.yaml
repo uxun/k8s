@@ -1,0 +1,129 @@
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: traefik-ingress-controller
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - services
+      - endpoints
+      - secrets
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+      - extensions
+    resources:
+      - ingresses
+    verbs:
+      - get
+      - list
+      - watch
+  - apiGroups:
+    - extensions
+    resources:
+    - ingresses/status
+    verbs:
+    - update
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: traefik-ingress-controller
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: traefik-ingress-controller
+subjects:
+- kind: ServiceAccount
+  name: traefik-ingress-controller
+  namespace: kube-system
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: traefik-ingress-controller
+  namespace: kube-system
+---
+kind: Deployment
+apiVersion: extensions/v1beta1
+metadata:
+  name: traefik-ingress-controller
+  namespace: kube-system
+  labels:
+    k8s-app: traefik-ingress-lb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      k8s-app: traefik-ingress-lb
+  template:
+    metadata:
+      labels:
+        k8s-app: traefik-ingress-lb
+        name: traefik-ingress-lb
+    spec:
+      serviceAccountName: traefik-ingress-controller
+      terminationGracePeriodSeconds: 60
+      containers:
+      - image: traefik
+        name: traefik-ingress-lb
+        ports:
+        - name: http
+          containerPort: 80
+        # add https
+        - name: https
+          containerPort: 443
+        - name: admin
+          containerPort: 8080
+        # add https
+        volumeMounts:
+        - mountPath: "/ssl"
+          name: ssl
+        - mountPath: "/config"
+          name: config        
+        args:
+        - --api
+        - --kubernetes
+        - --logLevel=INFO
+        # add https
+        - --web
+        - --configfile=/config/traefik.toml
+      # add https
+      volumes:
+      - name: traefik-tls-config
+        configMap:
+          name: traefik-tls-conf
+      - name: ssl
+        secret:
+          secretName: traefik-tls-cert
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: traefik-ingress-service
+  namespace: kube-system
+spec:
+  selector:
+    k8s-app: traefik-ingress-lb
+  ports:
+    - protocol: TCP
+      # traefik ingress-controller service port
+      port: 80
+      name: web
+      # custom default ports (20000~40000)
+      nodePort: 20080
+    - protocol: TCP
+	  # add https
+      port: 443
+      name: https
+      nodePort: 20443
+    - protocol: TCP
+      # web ui port
+      port: 8080
+      name: admin
+      nodePort: 20081
+  type: NodePort
