@@ -53,10 +53,10 @@ Bare-metal install Ingress-controller [reference](https://kubernetes.github.io/i
 
 ```shell
 # ingress-controller
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/mandatory.yaml
+wget https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/mandatory.yaml
 
 # ingress-service
-kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/baremetal/service-nodeport.yaml
+wget https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/provider/baremetal/service-nodeport.yaml
 
 # modify
 # service-nodeport.yaml 
@@ -139,17 +139,17 @@ spec:
         backend:
           serviceName: kube-nodeport 
           servicePort: 80
-	  - path: /kube    #请求kubeA.example.com/kube,转发到kube-xxxx的服务上
-	    backend:
-	      serviceName: kube-xxxx
-	      servicePort: 80
+      - path: /kube    #请求kubeA.example.com/kube,转发到kube-xxxx的服务上
+        backend:
+          serviceName: kube-xxxx
+          servicePort: 80
   - host: kubeB.example.com  
     http: 
       paths:
       - path: /
-	    backend:
-	      serviceName: kubeB
-	      servicePort: 80
+        backend:
+          serviceName: kubeB
+          servicePort: 80
 # validation
 $ kubectl get ingresses
 ```
