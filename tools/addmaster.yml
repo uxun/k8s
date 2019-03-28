@@ -28,4 +28,5 @@
 # reconfigure and restart the haproxy service
 - hosts: lb
   roles:
-  - { role: lb, tags:['restart_lb'] }
+  #- { role: lb, tags:['restart_lb'] }
+  - lb
