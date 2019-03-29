@@ -30,7 +30,7 @@ echo -e "\n----download docker-compose at:"
 echo https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE}/docker-compose-Linux-x86_64
 
 echo -e "\n----download harbor-offline-installer at:"
-echo https://storage.googleapis.com/harbor-releases/release-1.7.0/harbor-offline-installer-${HARBOR}.tgz
+echo https://storage.googleapis.com/harbor-releases/harbor-offline-installer-${HARBOR}.tgz
 
 echo -e "\n----download cni plugins at:"
 echo https://github.com/containernetworking/plugins/releases/download/${CNI_VER}/cni-${CNI_VER}.tgz

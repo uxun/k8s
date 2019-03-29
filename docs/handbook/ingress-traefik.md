@@ -278,7 +278,7 @@ EOF
 
 ### 3.apply trafik configmap
 
-```
+```shell
 kubectl apply -f /etc/ansible/manifests/ingress/tls/traefik-tls-configmap.yaml
 kubectl apply -f /etc/ansible/manifests/ingress/tls/traefik-tls-deployment.yaml
 ```
