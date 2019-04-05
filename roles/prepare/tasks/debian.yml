@@ -41,4 +41,3 @@
 
 - name: 重启 journald 服务
   service: name=systemd-journald state=restarted
-~

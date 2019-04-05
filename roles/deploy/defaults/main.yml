@@ -1,0 +1,10 @@
+# kubeconfig Configuration parameters 
+# default parameters
+CLUSTER_NAME: "kubernetes"
+USER_NAME: "admin"
+CONTEXT_NAME: "kubernetes"
+
+# CA 证书相关参数
+CA_EXPIRY: "87600h"
+CERT_EXPIRY: "87600h"
+
