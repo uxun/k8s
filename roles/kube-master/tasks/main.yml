@@ -13,7 +13,7 @@
   - admin-key.pem
   - ca.pem
   - ca-key.pem
-  - ca.csr
+#  - ca.csr
   - ca-config.json
   delegate_to: "{{ groups.deploy[0] }}"
 
