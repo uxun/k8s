@@ -21,7 +21,7 @@
   ignore_warnings: yes
 
 - name: 添加EPEL仓库
-  yum: name=epel-release state=latest
+  yum: name=epel-release state=present
 
 - name: 安装基础软件包
   yum: 
@@ -35,7 +35,7 @@
       - rsync               # 文件同步工具，分发证书等配置文件需要
       - ipset
       - ipvsadm
-    state: latest
+    state: present
 
 - name: 临时关闭 selinux
   shell: "setenforce 0"
