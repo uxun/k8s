@@ -67,7 +67,7 @@ FLANNEL_IPMASQ=true
 
 <u>注意：</u>
 
-1. 本安装方式，flannel使用apiserver 存储数据
+1. 注意：本安装方式，flannel 通过 apiserver 接口读取 podCidr 信息，详见 https://github.com/coreos/flannel/issues/847；因此想要修改节点pod网段掩码，请前往`roles/kube-master/defaults/main.yml`设置
 2. 配置相关RBAC 权限和 `service account`
 3. 配置`ConfigMap`包含 CNI配置和 flannel配置(指定backend等)，和`hosts`文件中相关设置对应
 4. `DaemonSet Pod`包含两个容器，一个容器运行flannel本身，另一个init容器部署cni 配置文件
