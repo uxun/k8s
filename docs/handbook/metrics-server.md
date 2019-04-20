@@ -4,7 +4,7 @@
 
 ## Metrics-server(服务资源指标的api)
 
-早期的核心指标数据是由heapster提供，1.11版本开始废弃，1.12彻底废弃-  ,1.13已经退休
+早期的核心指标数据是由heapster提供[cAdvisor](<https://kubernetes.io/docs/tasks/debug-application-cluster/resource-usage-monitoring/>)，1.11版本开始废弃，1.12彻底废弃-  ,1.13已经退休
 
 依赖于[kube-aggregator](https://github.com/kubernetes/kube-aggregator)，因此需要在apiserver中开启相关参数
 
@@ -18,12 +18,25 @@
 2. /apis/metrics.k8s.io/v1beta1 由metrics server提供
 3. 通过kube-aggregator(聚合器)  访问/apis/metrics.k8s.io/v1beta1和其他的$(kubectl api-versions)
 
-```mermaid
-graph TD
-A[kube-aggregator] 
-A --> B[api-versions]
-A --> C[metrics-server]
 ```
+    +----------------------------------------+
+    |           kube-aggregator              |
+    |             |         |                |
+    | +--------------+    +----------------+ |
+    | | api-versions |    | metrics-server | |
+    | +--------------+    +----------------+ |
+    |                                        |
+    +-------------------+--------------------+
+
+```
+
+### Monitoring architecture [refernece](<https://github.com/kubernetes/community/blob/master/contributors/design-proposals/instrumentation/monitoring_architecture.md>)
+
+核心度量workflow（黑色）：从 Kubelet、cAdvisor 等获取度量数据，再由 metrics-server 提供给 Dashboard、HPA 控制器等使用。
+
+监控流程（蓝色）：基于核心度量构建的监控流程，比如 Prometheus 可以从 metrics-server 获取核心度量，从其他数据源（如 Node Exporter 等）获取非核心度量，再基于它们构建监控告警系统。
+
+![monitoring_architecture](<https://raw.githubusercontent.com/kubernetes/community/master/contributors/design-proposals/instrumentation/monitoring_architecture.png>)
 
 
 
