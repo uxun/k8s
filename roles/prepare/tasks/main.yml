@@ -30,6 +30,7 @@
 - name: 创建 easzctl 工具的软连接
   file: src={{ base_dir }}/tools/easzctl dest=/usr/bin/easzctl state=link
   connection: local
+  run_once: true
 
 - name: 写入环境变量$PATH 
   lineinfile:

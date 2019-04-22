@@ -94,7 +94,7 @@ $ kubectl -n kube-system describe secret $(kubectl -n kube-system get secret | g
 
 Admin kubeconfig文件默认位置：`/root/.kube/config`，该文件中默认没有token字段，使用Kubeconfig方式登录，还需要将token追加到该文件中，完整的文件格式如下：
 
-```
+```yaml
 apiVersion: v1
 clusters:
 - cluster:
@@ -124,3 +124,38 @@ users:
 
 - 1. [Dashboard Access control](https://github.com/kubernetes/dashboard/wiki/Access-control)
 - 2. [a-read-only-kubernetes-dashboard](https://blog.cowger.us/2018/07/03/a-read-only-kubernetes-dashboard.html)
+
+------
+
+
+
+## 自定义创建Dashboard CA
+
+##### 1. 手动创建 Dashboard 授权证书 (用户证书) 与 SA 无关 （不创建，集群自动创建）
+
+```shell
+$ (umask 077; openssl genrsa -out dashboard.key 2048)
+#需要当前集群ca签证
+$ openssl req -new -key dashboard.key -out dashboard.csr -subj "/O=uxun/CN=www.uxun.com"
+$ openssl x509 -req -in dashboard.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out dashboard.crt -days 36500
+#将dashboard.csr,dashboard.key 创建 secret
+$ kubectl create secret generic dashboard-cert -n kubesystem --from-file=dashboard.crt=./dashboard.crt --from-file=dashboard.key=./dashboard.key 
+#查看
+$ kubectl get secret | grep dashboard-cert
+
+```
+
+##### 2. 通过kubeconfig 认证
+
+> TOKEN=$(kubectl get secret def-ns-admin-token-44k7c -o jsonpath={.data.token} | base64 -d)
+
+```shell
+#
+$ kubectl config set-cluster kubernetes --certificate-authority=./ca.crt --server="https://172.20.0.70:6443" --embed-certs=true --kubeconfig=/root/def-ns-admin.conf
+$ kubectl config set-credentials def-ns-admin --token=$TOKEN --kubeconfig=/root/def-ns-admin.conf
+$ kubectl config set-context def-ns-admin@kubernetes --cluster=kubernetes --user=def-ns-admin --kubeconfig=/root/def-ns-admin.conf
+$ kubectl config use-context def-ns-admin@kubernetes --kubeconfig=/root/def-ns-admin.conf
+
+
+```
+
