@@ -9,11 +9,7 @@
 
 ## 2.Ansible install
 
-Helm [variables](https://helm.sh/docs/using_helm/#environment-variables)
-
-Tiller [RBAC](https://helm.sh/docs/using_helm/#tiller-and-role-based-access-control)
-
-Helm [RBAC](https://helm.sh/docs/using_helm/#helm-and-role-based-access-control)
+在delpoy节点运行:
 
 ```yaml
 roles/helm
@@ -29,25 +25,12 @@ roles/helm
     └── tiller-csr.json.j2
 ```
 
-> 在helm客户端和tiller服务器间建立安全的SSL/TLS认证机制；
-> tiller服务器和helm客户端都是使用同一CA签发的`client cert`
->
-> Steps：
->
-> 1. 下载最新release的helm客户端到/etc/ansible/bin目录下，再由它自动推送到deploy的{{ bin_dir }}目录下
-> 2. 由集群CA签发helm客户端证书和私钥
-> 3. 由集群CA签发tiller服务端证书和私钥
-> 4. 创建tiller专用的RBAC配置，只允许helm在指定的namespace查看和安装应用
-> 5. 安全安装tiller到集群，tiller服务启用tls验证
-> 6. 配置helm客户端使用tls方式与tiller服务端通讯
-
-在delpoy节点运行:
-1.修改默认helm参数 vi  /etc/ansible/roles/helm/defaults/main.yml
+#### 1.修改默认helm参数 vi  /etc/ansible/roles/helm/defaults/main.yml
 
 - 下载二进制helm
 - tiller拉取地址
 
-2.执行安装 ansible-playbook /etc/ansible/roles/helm/helm.yml
+#### 2.执行安装 ansible-playbook /etc/ansible/roles/helm/helm.yml
 
 ```shell
 helm init \
@@ -61,6 +44,24 @@ helm init \
         --tiller-image {{ tiller_image }} \
         --stable-repo-url {{ repo_url }}"
 ```
+
+Helm [variables](https://helm.sh/docs/using_helm/#environment-variables)
+
+Tiller [RBAC](https://helm.sh/docs/using_helm/#tiller-and-role-based-access-control)
+
+Helm [RBAC](https://helm.sh/docs/using_helm/#helm-and-role-based-access-control)
+
+> 在helm客户端和tiller服务器间建立安全的SSL/TLS认证机制；
+> tiller服务器和helm客户端都是使用同一CA签发的`client cert`
+>
+> Steps：
+>
+> 1. 下载最新release的helm客户端到/etc/ansible/bin目录下，再由它自动推送到deploy的{{ bin_dir }}目录下
+> 2. 由集群CA签发helm客户端证书和私钥
+> 3. 由集群CA签发tiller服务端证书和私钥
+> 4. 创建tiller专用的RBAC配置，只允许helm在指定的namespace查看和安装应用
+> 5. 安全安装tiller到集群，tiller服务启用tls验证
+> 6. 配置helm客户端使用tls方式与tiller服务端通讯
 
 
 
@@ -181,8 +182,22 @@ Helm 使用 [Chart](https://github.com/kubernetes/charts) 来管理 Kubernetes m
 - 应用的基本信息 `Chart.yaml`
 - 一个或多个 Kubernetes manifest 文件模版（放置于 templates / 目录中），可以包括 Pod、Deployment、Service 等各种 Kubernetes 资源
 
-### Helm Repository
+## Helm UI
 
+[Kubeapps](https://github.com/kubeapps/kubeapps) 提供了一个开源的 Helm UI 界面，方便以图形界面的形式管理 Helm 应用。
+
+```sh
+curl -s https://api.github.com/repos/kubeapps/kubeapps/releases/latest | grep -i $(uname -s) | grep browser_download_url | cut -d '"' -f 4 | wget -i -
+sudo mv kubeapps-$(uname -s| tr '[:upper:]' '[:lower:]')-amd64 /usr/local/bin/kubeapps
+sudo chmod +x /usr/local/bin/kubeapps
+
+kubeapps up
+kubeapps dashboard
+```
+
+更多使用方法请参考 [Kubeapps 官方网站](https://kubeapps.com/)。
+
+## Helm Repository
 官方 repository:
 
 - <https://hub.helm.sh/>
@@ -198,14 +213,10 @@ Helm 使用 [Chart](https://github.com/kubernetes/charts) 来管理 Kubernetes m
 - <https://github.com/helm/charts>
 - <https://github.com/jackzampolin/tick-charts>
 
-### 常用 Helm 插件
+## Helm Plugins
 
 1. [helm-tiller](https://github.com/adamreese/helm-tiller) - Additional commands to work with Tiller
-
 2. [Technosophos's Helm Plugins](https://github.com/technosophos/helm-plugins) - Plugins for GitHub, Keybase, and GPG
-
 3. [helm-template](https://github.com/technosophos/helm-template) - Debug/render templates client-side
-
 4. [Helm Value Store](https://github.com/skuid/helm-value-store) - Plugin for working with Helm deployment values
-
-5. ### [Drone.io Helm Plugin](http://plugins.drone.io/ipedrazas/drone-helm/) - Run Helm inside of the Drone CI/CD system
+5. [Drone.io Helm Plugin](http://plugins.drone.io/ipedrazas/drone-helm/) - Run Helm inside of the Drone CI/CD system
