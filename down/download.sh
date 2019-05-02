@@ -6,6 +6,7 @@ K8S_VER=v1.13.3
 ETCD_VER=v3.2.24
 DOCKER_VER=18.06.3-ce
 CNI_VER=v0.6.0
+CNI_VERS=v0.7.5
 DOCKER_COMPOSE=1.23.0
 HARBOR=v1.7.4
 
@@ -34,6 +35,9 @@ echo https://storage.googleapis.com/harbor-releases/release-1.7.0/harbor-offline
 
 echo -e "\n----download cni plugins at:"
 echo https://github.com/containernetworking/plugins/releases/download/${CNI_VER}/cni-${CNI_VER}.tgz
+
+echo -e "\n----download cni plugins > version 0.6.0 at:"
+echo https://github.com/containernetworking/plugins/releases/download/${CNI_VERS}/cni-plugins-amd64-${CNI_VERS}.tgz
 
 sleep 20
 
@@ -109,4 +113,16 @@ if [ -f "cni-${CNI_VER}.tgz" ]; then
   mv -f portmap ../bin
 else
   echo Please download 'cni-${CNI_VER}.tgz' first 
+fi
+### prepare cni plugins > version 0.6.0, needed by flannel;
+if [ -f "cni-plugins-amd64-${CNI_VERS}.tgz" ]; then
+  echo -e "\nextracting cni plugins version > 0.6.0binaries..."
+  tar zxf cni-plugins-amd64-${CNI_VERS}.tgz
+  mv -f bridge ../bin
+  mv -f flannel ../bin
+  mv -f host-local ../bin
+  mv -f loopback ../bin
+  mv -f portmap ../bin
+else
+  echo Please download 'cni-plugins-amd64-${CNI_VERS}.tgz' first 
 fi
