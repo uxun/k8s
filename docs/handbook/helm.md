@@ -71,8 +71,14 @@ Helm [RBAC](https://helm.sh/docs/using_helm/#helm-and-role-based-access-control)
 
 ### tiller
 
+>  repository:
+>
+> - <https://hub.helm.sh/>
+> - <https://github.com/kubernetes/charts>
+> - <https://github.com/bitnami/charts>
+
 ```shell
-# auto update
+# auto update 
 $ helm init --upgrade 
 # manual upgrades
 $ kubectl --namespace=kube-system set image deployments/tiller-deploy tiller=gcr.io/kubernetes-helm/tiller:v2.12.3
@@ -81,13 +87,13 @@ $ kubectl --namespace=kube-system set image deployments/tiller-deploy tiller=gcr
 $ kubectl delete deployment tiller-deploy --namespace kube-system
 $ helm reset
 
-# re-installed
-$ helm init
+# 设置历史记录
+$ helm init --history-max 200
 
 # upgrade chart repo
 $ helm repo update 
 $ helm repo list
-$ helm repo add dev https://example.com/dev-charts
+$ helm repo add bitnami https://charts.bitnami.com/bitnami
 
 # ADVANCED USAGE e.g
 $ helm init --node-selectors "beta.kubernetes.io/os"="linux"
@@ -110,23 +116,32 @@ mariadbUser: user0
 mariadbDatabase: user0db
 EOF
 $ helm install -f config.yaml stable/mariadb
+# or
+$ helm install stable/mariadb --set persistence.enabled=false --name mydb
+# 查看变量是否生效
+$ helm get values happy-panda
 
 # install 
 $ helm install --name mem1 stable/memcached
 
 # delete
-$ helm delete --dry-run
-$ helm delete happy-panda
+$ helm del grafana --purge 
+
+# download helm charts
+$ helm fetch --untar stable/prometheus
+$ helm fetch --untar stable/grafana
 
 # list
 $ helm list --all
 
-# upgrad or rollback 
+# helm upgrad 
 $ helm upgrade -f panda.yaml happy-panda stable/mariadb
-$ helm rollback [RELEASE] [REVISION]
-
 # hisory
-$ helm hisory 
+$ helm history grafana
+REVISION	UPDATED                 	STATUS  	CHART         	DESCRIPTION
+1       	Fri Apr 26 17:07:08 2019	DEPLOYED	grafana-1.16.0	Install complete
+# helm rollback [RELEASE] [REVISION]
+$ helm rollback grafana 1
 
 # status 
 $ helm status $HELM_NAME 
@@ -134,11 +149,16 @@ $ helm status $HELM_NAME
 
 ### Plugin
 
+> 1. [helm-template](https://github.com/technosophos/helm-template) - Debug/render templates client-side
+> 2. [Helm Value Store](https://github.com/skuid/helm-value-store) - Plugin for working with Helm deployment values
+> 3. [Drone.io Helm Plugin](http://plugins.drone.io/ipedrazas/drone-helm/) - Run Helm inside of the Drone CI/CD system
+
 ```shell
 # INSTALLING A PLUGIN
 $ helm plugin install https://github.com/technosophos/helm-template
 $ helm plugin install http://domain/path/to/plugin.tar.gz
 ```
+
 
 
 
@@ -158,19 +178,15 @@ $ helm plugin install http://domain/path/to/plugin.tar.gz
 
 ### 程序架构
 
-> Helm: 客户端，管理本地Chart仓库，管理Chart，与Tiller服务端交互，
+工作流
+
+> release 是 chart 的运行实例，代表了一个正在运行的应用。当 chart 被安装到 Kubernetes 集群，就生成一个 release。chart 能够多次安装到同一个集群，每次安装都是一个 release。
 >
-> ​	发送Chart，实例的安装，查询，卸载等操作
+> Helm: 客户端，管理本地Chart仓库，管理Chart，与Tiller服务端交互，发送Chart，实例的安装，查询，卸载等操作
 >
 > Tiller：服务端，接受helm发来的Charts与config，合并成release，连接API server
 >
-> Chart：类属性 -->赋值后--> release
-
-##### 工作流
-
-```
-kubernetes-cluster --> API server --> Tiller --> helm
-```
+> [Chart](https://github.com/helm/helm/blob/master/docs/charts.md)：类属性 -->赋值后--> release
 
 Helm 支持两种方式管理依赖的方式：
 
@@ -181,6 +197,8 @@ Helm 使用 [Chart](https://github.com/kubernetes/charts) 来管理 Kubernetes m
 
 - 应用的基本信息 `Chart.yaml`
 - 一个或多个 Kubernetes manifest 文件模版（放置于 templates / 目录中），可以包括 Pod、Deployment、Service 等各种 Kubernetes 资源
+
+
 
 ## Helm UI
 
@@ -197,26 +215,3 @@ kubeapps dashboard
 
 更多使用方法请参考 [Kubeapps 官方网站](https://kubeapps.com/)。
 
-## Helm Repository
-官方 repository:
-
-- <https://hub.helm.sh/>
-- <https://github.com/kubernetes/charts>
-
-第三方 repository:
-
-- <https://github.com/coreos/prometheus-operator/tree/master/helm>
-- <https://github.com/deis/charts>
-- <https://github.com/bitnami/charts>
-- <https://github.com/att-comdev/openstack-helm>
-- <https://github.com/sapcc/openstack-helm>
-- <https://github.com/helm/charts>
-- <https://github.com/jackzampolin/tick-charts>
-
-## Helm Plugins
-
-1. [helm-tiller](https://github.com/adamreese/helm-tiller) - Additional commands to work with Tiller
-2. [Technosophos's Helm Plugins](https://github.com/technosophos/helm-plugins) - Plugins for GitHub, Keybase, and GPG
-3. [helm-template](https://github.com/technosophos/helm-template) - Debug/render templates client-side
-4. [Helm Value Store](https://github.com/skuid/helm-value-store) - Plugin for working with Helm deployment values
-5. [Drone.io Helm Plugin](http://plugins.drone.io/ipedrazas/drone-helm/) - Run Helm inside of the Drone CI/CD system
