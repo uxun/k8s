@@ -69,45 +69,60 @@ Helm [RBAC](https://helm.sh/docs/using_helm/#helm-and-role-based-access-control)
 
 [ADVANCED USAGE(高级用法)](https://helm.sh/docs/using_helm/#advanced-usage)
 
-### tiller
+## tiller
 
 >  repository:
 >
 > - <https://hub.helm.sh/>
 > - <https://github.com/kubernetes/charts>
-> - <https://github.com/bitnami/charts>
+> - <https://github.com/bitnami/charts
+>
+> stable repo modify
+>
+> - ~/.helm/repository/repositories.yaml
 
 ```shell
 # auto update 
 $ helm init --upgrade 
+# 设置历史记录
+$ helm init --history-max 200
+
 # manual upgrades
 $ kubectl --namespace=kube-system set image deployments/tiller-deploy tiller=gcr.io/kubernetes-helm/tiller:v2.12.3
 
+# reinstall
 # Delete，Tiller将其数据存储在Kubernetes ConfigMaps中，因此您可以安全地删除并重新安装
 $ kubectl delete deployment tiller-deploy --namespace kube-system
 $ helm reset
-
-# 设置历史记录
-$ helm init --history-max 200
 
 # upgrade chart repo
 $ helm repo update 
 $ helm repo list
 $ helm repo add bitnami https://charts.bitnami.com/bitnami
+# stable repo 
+$ helm init -c --stable-repo-url https://kubernetes.oss-cn-hangzhou.aliyuncs.com/chart
 
 # ADVANCED USAGE e.g
-$ helm init --node-selectors "beta.kubernetes.io/os"="linux"
-
+$ helm init --node-selectors "beta.kubernetes.io/os"="linux" 
 ```
 
-### helm
+## helm
 
-```shell
-# search
-$ helm search
+> 1. `helm inspect` 查看Chart的信息
+> 2. `helm install` 指定Chart 部署一个Release到Kubernetes
+> 3. `helm package` 打包Chart(压缩包文件)
+> 4. `helm list` 列出已经部署的Release
+> 5. `helm delete [RELEASE]` 删除一个Release. 并没有物理删除， 出于审计需要，历史可查。
+> 6. `helm status [RELEASE]` 查看指定的Release信息，即使使用`helm delete`命令删除的Release.
+> 7. `helm upgrade` 升级某个Release
+> 8. `helm rollback [RELEASE] [REVISION]` 回滚Release到指定发布序列
+> 9. `helm get values [RELEASE]` 查看Release的配置文件值
 
+#### 1.`helm inspect` 查看Chart的信息
+
+```sh e
 # description 
-$ helm inspect stable/mariadb
+$ helm inspect stable/prometheus-operator
 
 # customize the chart
 $ helm inspect values stable/mariadb
@@ -115,14 +130,35 @@ $ cat << EOF > config.yaml
 mariadbUser: user0
 mariadbDatabase: user0db
 EOF
-$ helm install -f config.yaml stable/mariadb
-# or
-$ helm install stable/mariadb --set persistence.enabled=false --name mydb
-# 查看变量是否生效
-$ helm get values happy-panda
 
-# install 
-$ helm install --name mem1 stable/memcached
+# 修改配置
+$ helm inspect values stable/prometheus-operator > prom.yaml
+$ helm install --name monitor --namespace monitoring -f prom.yaml stable/prometheus-operator
+# 查看变量是否生效
+$ helm get values monitor
+```
+
+#### 2.`helm install` 指定Chart 部署一个Release到Kubernetes
+
+> set的优先级最高，并将值合并进-f指定的配置文件中
+
+```shell
+$ helm install stable/mariadb --set persistence.enabled=false --name mydb
+
+# 两种方式部署
+1.-f(--values):使用YAML文件，文件内容要覆盖Chart的配置值。
+2.--set: 指定具体要覆盖的默认配置值。参考https://helm.sh/docs/using_helm/#the-format-and-limitations-of-set
+	--set name1=val1,name2=val2
+	
+# 打印清单文件内容，不执行部署
+$ helm install . --dry-run --debug --set image.tag=latest
+```
+
+#### 3.other
+
+```shell
+# list
+$ helm list --all
 
 # delete
 $ helm del grafana --purge 
@@ -131,20 +167,18 @@ $ helm del grafana --purge
 $ helm fetch --untar stable/prometheus
 $ helm fetch --untar stable/grafana
 
-# list
-$ helm list --all
+# helm upgrade
+$ helm upgrade -f mydb.yaml mydb stable/mariadb
 
-# helm upgrad 
-$ helm upgrade -f panda.yaml happy-panda stable/mariadb
+# status 
+$ helm status $HELM_NAME 
+
 # hisory
 $ helm history grafana
 REVISION	UPDATED                 	STATUS  	CHART         	DESCRIPTION
 1       	Fri Apr 26 17:07:08 2019	DEPLOYED	grafana-1.16.0	Install complete
 # helm rollback [RELEASE] [REVISION]
 $ helm rollback grafana 1
-
-# status 
-$ helm status $HELM_NAME 
 ```
 
 ### Plugin
