@@ -1,6 +1,6 @@
-# install docker service
+# to install containerd service
 - hosts:
   - kube-master
   - kube-node
   roles:
-  - docker
+  - containerd
