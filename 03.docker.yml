@@ -3,4 +3,4 @@
   - kube-master
   - kube-node
   roles:
-  - docker
+  - containerd
