@@ -1,6 +1,5 @@
 # 国内镜像加速
-
-REG_MIRROR_1: "https://docker.mirrors.ustc.edu.cn"
+#REG_MIRROR_1: "https://docker.mirrors.ustc.edu.cn"
 
 # docker日志相关
 
