@@ -2,11 +2,11 @@
 # This script describes where to download the official released binaries needed 
 
 # example releases
-K8S_VER=v1.13.3
+K8S_VER=v1.13.7
 ETCD_VER=v3.2.24
 DOCKER_VER=18.06.3-ce
 CNI_VER=v0.6.0
-CNI_VERS=v0.7.5
+#CNI_VERS=v0.7.5
 DOCKER_COMPOSE=1.23.0
 HARBOR=v1.7.4
 
