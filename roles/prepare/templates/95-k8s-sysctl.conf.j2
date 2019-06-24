@@ -2,10 +2,12 @@ net.ipv4.ip_forward = 1
 net.bridge.bridge-nf-call-iptables = 1
 net.bridge.bridge-nf-call-ip6tables = 1
 net.bridge.bridge-nf-call-arptables = 1
+# -------------------------------------# 
 net.netfilter.nf_conntrack_max=1000000
 vm.swappiness = 0
 vm.max_map_count=655360
 fs.file-max=655360
+# -------------------------------------#
 # NAT冲突开启注释 tcp_tw_recycle = 0
 #net.ipv4.tcp_tw_recycle = 0
 # 不检查物理内存，开启OOM
