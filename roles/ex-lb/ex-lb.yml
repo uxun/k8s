@@ -1,0 +1,5 @@
+- hosts: ex-lb
+  roles:
+  - { role: chrony, when: "groups['chrony']|length > 0" } 
+  - prepare
+  - ex-lb
