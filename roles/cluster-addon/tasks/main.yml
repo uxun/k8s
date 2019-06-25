@@ -1,3 +1,8 @@
+- name: 在 node 节点创建相关目录
+  file: path={{ item }} state=directory
+  with_items:
+  - /opt/kube/kube-system
+
 # 设置 dns svc ip (这里选用 SERVICE_CIDR 中第2个IP)
 - name: 注册变量 DNS_SVC_IP
   shell: echo {{ SERVICE_CIDR }}|cut -d/ -f1|awk -F. '{print $1"."$2"."$3"."$4+2}'
@@ -6,24 +11,16 @@
 - name: 设置变量 CLUSTER_DNS_SVC_IP
   set_fact: CLUSTER_DNS_SVC_IP={{ DNS_SVC_IP.stdout }}
 
-- block:
-    - name: 在deploy 节点创建相关目录
-      file: path={{ item }} state=directory
-      with_items:
-      - /opt/kube/kube-system/kubedns
-      - /opt/kube/kube-system/coredns
-    
-    # DNS文件中部分参数根据hosts文件设置而定，因此需要用template模块替换参数
-    - name: 准备 DNS的部署文件
-      template: src={{ item }}.yaml.j2 dest=/opt/kube/kube-system/{{ item }}/{{ item }}.yaml
-      with_items:
-      - kubedns
-      - coredns
-    
-    - name: 获取所有已经创建的POD信息
-      command: "{{ bin_dir }}/kubectl get pod --all-namespaces"
-      register: pod_info
-  delegate_to: "{{ groups.deploy[0] }}"
+# DNS文件中部分参数根据hosts文件设置而定，因此需要用template模块替换参数
+- name: 准备 DNS的部署文件
+  template: src={{ item }}.yaml.j2 dest=/opt/kube/kube-system/{{ item }}.yaml
+  with_items:
+  - kubedns
+  - coredns
+
+- name: 获取所有已经创建的POD信息
+  command: "{{ bin_dir }}/kubectl get pod --all-namespaces"
+  register: pod_info
   run_once: true
 
 - name: 获取已下载离线镜像信息
@@ -51,9 +48,8 @@
           when: 'dns_offline in image_info.stdout and CONTAINER_RUNTIME == "containerd"'
     
     - name: 创建{{ dns_backend }}部署
-      shell: "{{ bin_dir }}/kubectl apply -f /opt/kube/kube-system/{{ dns_backend }}"
+      shell: "{{ bin_dir }}/kubectl apply -f /opt/kube/kube-system/{{ dns_backend }}.yaml"
       run_once: true
-      delegate_to: "{{ groups.deploy[0] }}"
   when: 
   - '"kube-dns" not in pod_info.stdout'
   - '"coredns" not in pod_info.stdout'
@@ -79,9 +75,9 @@
           when: 'metricsserver_offline in image_info.stdout and CONTAINER_RUNTIME == "containerd"'
     
     - name: 创建 metrics-server部署
-      shell: "{{ bin_dir }}/kubectl apply -f {{ base_dir }}/manifests/metrics-server"
-      delegate_to: "{{ groups.deploy[0] }}"
+      shell: "{{ base_dir }}/bin/kubectl apply -f {{ base_dir }}/manifests/metrics-server"
       run_once: true
+      connection: local
   when: '"metrics-server" not in pod_info.stdout and metricsserver_install == "yes"'
   ignore_errors: true
 
@@ -105,19 +101,19 @@
           - "{{ dashboard_offline }}"
           - "{{ heapster_offline }}"
           when: "item in image_info.stdout and CONTAINER_RUNTIME == 'docker'"
-      
+
         - name: 导入 dashboard heapster的离线镜像（containerd）
           shell: "{{ bin_dir }}/ctr -n=k8s.io images import /opt/kube/images/{{ item }}"
           with_items:
           - "{{ dashboard_offline }}"
           - "{{ heapster_offline }}"
           when: "item in image_info.stdout and CONTAINER_RUNTIME == 'containerd'"
-      
+
     - name: 创建 dashboard部署
-      shell: "{{ bin_dir }}/kubectl apply -f {{ base_dir }}/manifests/dashboard && \
-	      {{ bin_dir }}/kubectl apply -f {{ base_dir }}/manifests/heapster/heapster-only"
-      delegate_to: "{{ groups.deploy[0] }}"
+      shell: "{{ base_dir }}/bin/kubectl apply -f {{ base_dir }}/manifests/dashboard && \
+	      {{ base_dir }}/bin/kubectl apply -f {{ base_dir }}/manifests/heapster/heapster-only"
       run_once: true
+      connection: local
   when: '"kubernetes-dashboard" not in pod_info.stdout and dashboard_install == "yes"'
   ignore_errors: true
 
@@ -147,18 +143,10 @@
       with_items:
       - "metallb.yaml"
       - "{{ metallb_protocol }}.yaml"
-      delegate_to: "{{ groups.deploy[0] }}"
-      run_once: true
 
     - name: 创建 metallb controller 部署
-      shell: "{{ bin_dir }}/kubectl apply -f /opt/kube/kube-system/metallb.yaml"
-      delegate_to: "{{ groups.deploy[0] }}"
-      run_once: true
-
-    - name: 创建 metallb configmap
-      shell: "{{ bin_dir }}/kubectl apply -f /opt/kube/kube-system/{{ metallb_protocol }}.yaml"
-      delegate_to: "{{ groups.deploy[0] }}"
+      shell: "{{ bin_dir }}/kubectl apply -f /opt/kube/kube-system/metallb.yaml && \
+	      {{ bin_dir }}/kubectl apply -f /opt/kube/kube-system/{{ metallb_protocol }}.yaml"
       run_once: true
   when: '"metallb" not in pod_info.stdout and metallb_install == "yes"'
   ignore_errors: true
-
