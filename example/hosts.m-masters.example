@@ -1,74 +1,60 @@
-# 集群部署节点：一般为运行ansible 脚本的节点
-# 变量 NTP_ENABLED (=yes/no) 设置集群是否安装 chrony 时间同步
-[deploy]
-192.168.1.1 NTP_ENABLED=no
-
-# etcd集群请提供如下NODE_NAME，注意etcd集群必须是1,3,5,7...奇数个节点
+# 'etcd' cluster should have odd member(s) (1,3,5,...)
+# variable 'NODE_NAME' is the distinct name of a member in 'etcd' cluster
 [etcd]
 192.168.1.1 NODE_NAME=etcd1
 192.168.1.2 NODE_NAME=etcd2
 192.168.1.3 NODE_NAME=etcd3
 
+# master node(s)
 [kube-master]
 192.168.1.1
 192.168.1.2
 
+# work node(s)
 [kube-node]
 192.168.1.3
 192.168.1.4
 
-# 参数 NEW_INSTALL：yes表示新建，no表示使用已有harbor服务器
-# 如果不使用域名，可以设置 HARBOR_DOMAIN=""
+# [optional] harbor server, a private docker registry
+# 'NEW_INSTALL': 'yes' to install a harbor server; 'no' to integrate with existed one
 [harbor]
 #192.168.1.8 HARBOR_DOMAIN="harbor.yourdomain.com" NEW_INSTALL=no
 
-# 负载均衡(目前已支持多于2节点，一般2节点就够了) 安装 haproxy+keepalived
-[lb]
-192.168.1.1 LB_ROLE=backup
-192.168.1.2 LB_ROLE=master
-
-#【可选】外部负载均衡，用于自有环境负载转发 NodePort 暴露的服务等
+# [optional] loadbalance for accessing k8s from outside
 [ex-lb]
-#192.168.1.6 LB_ROLE=backup EX_VIP=192.168.1.250
-#192.168.1.7 LB_ROLE=master EX_VIP=192.168.1.250
+#192.168.1.6 LB_ROLE=backup EX_APISERVER_VIP=192.168.1.250 EX_APISERVER_PORT=8443
+#192.168.1.7 LB_ROLE=master EX_APISERVER_VIP=192.168.1.250 EX_APISERVER_PORT=8443
+
+# [optional] ntp server for the cluster
+[chrony]
+#192.168.1.1
 
 [all:vars]
-# ---------集群主要参数---------------
-#集群部署模式：allinone, single-master, multi-master
-DEPLOY_MODE=multi-master
-
-# 集群 MASTER IP即 LB节点VIP地址，为区别与默认apiserver端口，设置VIP监听的服务端口8443
-# 公有云上请使用云负载均衡内网地址和监听端口
-MASTER_IP="192.168.1.10"
-KUBE_APISERVER="https://{{ MASTER_IP }}:8443"
-
-# 集群容器运行时，支持 docker, containerd
+# --------- Main Variables ---------------
+# Cluster container-runtime supported: docker, containerd
 CONTAINER_RUNTIME="docker"
 
-# 集群网络插件，目前支持calico, flannel, kube-router, cilium
+# Network plugins supported: calico, flannel, kube-router, cilium, kube-ovn
 CLUSTER_NETWORK="flannel"
 
-# 服务网段 (Service CIDR），注意不要与内网已有网段冲突
+# K8S Service CIDR, not overlap with node(host) networking
 SERVICE_CIDR="10.68.0.0/16"
 
-# POD 网段 (Cluster CIDR），注意不要与内网已有网段冲突
+# Cluster CIDR (Pod CIDR), not overlap with node(host) networking
 CLUSTER_CIDR="172.20.0.0/16"
 
-# 服务端口范围 (NodePort Range)
+# NodePort Range
 NODE_PORT_RANGE="20000-40000"
 
-# 集群 DNS 域名
+# Cluster DNS Domain
 CLUSTER_DNS_DOMAIN="cluster.local."
 
-# 集群basic auth apiserver 基础认证（用户名/密码）配置
-# master 节点文件‘/etc/kubernetes/ssl/basic-auth.csv’ 可以查看密码
-
-# ---------附加参数--------------------
-#默认二进制文件目录
+# -------- Additional Variables (don't change the default value right now) ---
+# Binaries Directory
 bin_dir="/opt/kube/bin"
 
-#证书目录
+# CA and other components cert/key Directory
 ca_dir="/etc/kubernetes/ssl"
 
-#部署目录，即 ansible 工作目录，建议不要修改
+# Deploy Directory (kubeasz workspace)
 base_dir="/etc/ansible"
