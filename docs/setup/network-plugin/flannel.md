@@ -1,39 +1,28 @@
-# 06.Install_Flannel
+# 06.Install_Flannel (DaemonSet)
 
-1. ##### 修改/etc/ansible/hosts 
+> Kubernetes cluster 的网络插件之一，简单高效，且提供多个后端`backend`模式供选择；以`DaemonSet Pod`方式集成到k8s集群，需要在所有master节点和node节点安装。
+>
+> 必须确保kube-master和kube-node节点已经成功部署
 
-     `CLUSTER_NETWORK="flannel"`
+### OVERVIEW
 
-2. ##### $ ansible-playbook [06.network.yml](../../../06.network.yml)
+1. **Download [CNI Plugin](https://github.com/containernetworking/plugins/releases)**
 
-```
-roles/flannel
-├── defaults
-│   └── main.yml
-├── tasks
-│   └── main.yml
-└── templates
-    └── kube-flannel.yaml.j2
-```
+2. ##### **修改/etc/ansible/hosts** `CLUSTER_NETWORK="flannel"`
 
-Kubernetes cluster 的网络插件之一，简单高效，且提供多个后端`backend`模式供选择；以`DaemonSet Pod`方式集成到k8s集群，需要在所有master节点和node节点安装。
+3. ##### **$ ansible-playbook [06.network.yml](../../../06.network.yml)**
 
-##### Task ⌘+ [roles/flannel/tasks/main.yml](../../../roles/flannel/tasks/main.yml) 
+------
 
-## 1.Download CNI Plugin
+### 1.Download CNI Plugin
 
-Download CNI [release](https://github.com/containernetworking/plugins/releases)
+Download CNI [release](https://github.com/containernetworking/plugins/releases) 解压后，选择复制到项目 `bin`目录下
 
-Download [cni-v0.6.0.tgz](https://github.com/containernetworking/plugins/releases/download/v0.6.0/cni-v0.6.0.tgz) 解压后里面有很多插件，选择如下几个复制到项目 `bin`目录下
+flannel用到的插件 {bridge，flannel，host-local，loopback，portmap}
 
-- flannel用到的插件
-  - bridge
-  - flannel
-  - host-local
-  - loopback
-  - portmap
+Flannel CNI 插件的配置文件可以包含多个`plugin` 或由其调用其他`plugin`；
 
-Flannel CNI 插件的配置文件可以包含多个`plugin` 或由其调用其他`plugin`；`Flannel DaemonSet Pod`运行以后会生成`/run/flannel/subnet.env `文件，例如：
+`Flannel DaemonSet Pod`运行以后会生成`/run/flannel/subnet.env `文件，例如：
 
 ``` bash
 FLANNEL_NETWORK=10.1.0.0/16
@@ -61,18 +50,17 @@ FLANNEL_IPMASQ=true
   - [flannel cni 插件](https://github.com/containernetworking/plugins/tree/master/plugins/meta/flannel)
   - [更多 cni 插件](https://github.com/containernetworking/plugins)
 
-## 2. Prepare Flannel-DaemonSet.yaml 
+### 2. Prepare Flannel-DaemonSet.yaml 
 
-⌘+ [roles/flannel/templates/kube-flannel.yaml.j2](../../../roles/flannel/templates/kube-flannel.yaml.j2)
+[roles/flannel/templates/kube-flannel.yaml.j2](../../../roles/flannel/templates/kube-flannel.yaml.j2)
 
-<u>注意：</u>
-
-1. 注意：本安装方式，flannel 通过 apiserver 接口读取 podCidr 信息，详见 https://github.com/coreos/flannel/issues/847；因此想要修改节点pod网段掩码，请前往`roles/kube-master/defaults/main.yml`设置
-2. 配置相关RBAC 权限和 `service account`
-3. 配置`ConfigMap`包含 CNI配置和 flannel配置(指定backend等)，和`hosts`文件中相关设置对应
-4. `DaemonSet Pod`包含两个容器，一个容器运行flannel本身，另一个init容器部署cni 配置文件
-5. 为方便国内加速使用镜像 `jmgao1983/flannel:v0.10.0-amd64` (官方镜像在docker-hub上的转存)
-6. 特别注意：如果服务器是多网卡（例如vagrant环境），则需要在`roles/flannel/templates/kube-flannel.yaml.j2 `中增加指定环境变量，详见 [kubernetes ISSUE 39701](https://github.com/kubernetes/kubernetes/issues/39701)
+> 1. 注意：本安装方式，flannel 通过 apiserver 接口读取 podCidr 信息，详见 https://github.com/coreos/flannel/issues/847；因此想要修改节点pod网段掩码，请前往`roles/kube-master/defaults/main.yml`设置
+> 2. 配置相关RBAC 权限和 `service account`
+> 3. 配置`ConfigMap`包含 CNI配置和 flannel配置(指定backend等)，和`hosts`文件中相关设置对应
+> 4. `DaemonSet Pod`包含两个容器，一个容器运行flannel本身，另一个init容器部署cni 配置文件
+> 5. 为方便国内加速使用镜像 `jmgao1983/flannel:v0.10.0-amd64` (官方镜像在docker-hub上的转存)
+> 6. 特别注意：如果服务器是多网卡（例如vagrant环境），则需要在`roles/flannel/templates/kube-flannel.yaml.j2 `中增加指定环境变量，详见 [kubernetes ISSUE 39701](https://github.com/kubernetes/kubernetes/issues/39701)
+>
 
 ``` bash
       ...
@@ -91,13 +79,7 @@ FLANNEL_IPMASQ=true
           value: {{ KUBE_APISERVER.split(':')[2] }}      
        ...
 ```
-## 3.Install flannel network
-
-1. 安装之前必须确保kube-master和kube-node节点已经成功部署
-2. 只需要在任意装有kubectl客户端的节点运行 kubectl create安装即可
-3. 等待15s后(视网络拉取相关镜像速度)，flannel 网络插件安装完成，删除之前kube-node安装时默认cni网络配置
-
-## 4.Validation flannel network
+### 3.Validation flannel network
 
 执行flannel安装成功后可以验证如下：(需要等待镜像下载完成，有时候即便上一步已经配置了docker国内加速，还是可能比较慢，请确认以下容器运行起来以后，再执行后续验证步骤)
 
