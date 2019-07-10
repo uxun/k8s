@@ -1,0 +1,35 @@
+# All host Upgrade kernel Version 
+- hosts: all
+  remote_user: root
+  tasks: 
+  - name: import kernel repo KEY
+    rpm_key:
+      state: present
+      key: https://www.elrepo.org/RPM-GPG-KEY-elrepo.org 
+
+  - name: import kernel repo 
+    yum_repository: 
+      name: elrepo-kernel
+      description: kernel elrepo repo
+      file: elrepo
+      baseurl: http://elrepo.org/linux/kernel/el7/$basearch/
+      mirrorlist: http://mirrors.elrepo.org/mirrors-elrepo-kernel.el7
+
+  - name : yum install kernel-lt 
+    yum:
+      name: 
+        - yum-plugin-fastestmirror
+        - kernel-lt
+      state: present
+
+  - name: Set the grub kernel version by default
+    shell: grub2-set-default 0
+
+  - name: Set kernel start the version
+    lineinfile:
+      dest: /etc/default/grub
+      regexp: '^GRUB_DEFAULT='
+      line: GRUB_DEFAULT=0
+
+  - name: Reset the kernel
+    shell: grub2-mkconfig -o /boot/grub2/grub.cfg
